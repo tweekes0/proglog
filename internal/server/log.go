@@ -12,7 +12,7 @@ type Record struct {
 
 // Log struct that holds all logging records
 type Log struct {
-	mut sync.Mutex
+	mu sync.Mutex
 	records []Record
 }
 
@@ -23,8 +23,8 @@ func NewLog() *Log {
 
 // Append record to log 
 func (l *Log) Append(r Record) (uint64, error) {
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	r.Offset = uint64(len(l.records))
 	l.records = append(l.records, r)
@@ -33,8 +33,8 @@ func (l *Log) Append(r Record) (uint64, error) {
 
 // Read log record and return error if offset is invalid
 func (l *Log) Read(offset uint64) (*Record, error) {
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if offset >= uint64(len(l.records)) {
 		return nil, ErrOffsetNotFound
