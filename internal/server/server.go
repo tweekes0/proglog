@@ -22,14 +22,16 @@ type grpcServer struct {
 	*Config
 }
 
-func NewGRPCServer(config *Config) (*grpc.Server, error) {
-	gsrv := grpc.NewServer()
+func NewGRPCServer(config *Config, opts ...grpc.ServerOption) (
+	*grpc.Server, error,
+	) {
+	gsrv := grpc.NewServer(opts...)
 	srv, err := newgrpcServer(config)
 	if err != nil {
 		return nil, err
 	}
 
-	api.RegisterLogServer(gsrv,srv)
+	api.RegisterLogServer(gsrv, srv)
 	return gsrv, nil
 }
 
@@ -83,25 +85,25 @@ func (s *grpcServer) ConsumeStream(
 	req *api.ConsumeRequest,
 	stream api.Log_ConsumeStreamServer) error {
 
-		for {
-			select {
-			case <- stream.Context().Done():
-				return nil
+	for {
+		select {
+		case <-stream.Context().Done():
+			return nil
+		default:
+			resp, err := s.Consume(stream.Context(), req)
+			switch err.(type) {
+			case nil:
+			case api.ErrOffsetOutOfRange:
+				continue
 			default:
-				resp, err := s.Consume(stream.Context(), req)
-				switch err.(type) {
-				case nil:
-				case api.ErrOffsetOutOfRange:
-					continue
-				default:
-					return err
-				}
-
-				if err = stream.Send(resp); err != nil {
-					return err
-				}
-
-				req.Offset++
+				return err
 			}
+
+			if err = stream.Send(resp); err != nil {
+				return err
+			}
+
+			req.Offset++
 		}
+	}
 }
