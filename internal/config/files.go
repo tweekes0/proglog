@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -12,11 +11,16 @@ var (
 	ServerKeyFile  = configFile("server-key.pem")
 	ClientCertFile = configFile("client.pem")
 	ClientKeyFile = configFile("client-key.pem")
+	RootClientCertFile = configFile("root-client.pem")
+	RootClientKeyFile = configFile("root-client-key.pem")
+	NobodyClientCertFile = configFile("nobody-client.pem")
+	NobodyClientKeyFile = configFile("nobody-client-key.pem")
+	ACLModelFile = configFile("model.conf")
+	ACLPolicyFile = configFile("policy.csv")
 )
 
 func configFile(filename string) string {
 	if dir := os.Getenv("CONFIG_DIR"); dir != "" {
-		fmt.Println("hello")
 		return filepath.Join(dir, filename)
 	}
 
@@ -25,5 +29,5 @@ func configFile(filename string) string {
 		panic(err)
 	}
 
-	return filepath.Join(home, ".proglog_cert", filename)
+	return filepath.Join(home, ".proglog", filename)
 }
